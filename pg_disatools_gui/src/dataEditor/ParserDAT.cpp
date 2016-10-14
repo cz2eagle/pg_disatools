@@ -516,9 +516,9 @@ struct unicodeParser{
 
 #endif
 
-ParserDAT::ParserDAT(const QString& defFile, QObject *parent): DataFile(parent) {
+ParserDAT::ParserDAT(const QString& defFile, QObject *parent): AbstractTreeListModel(parent) {
 #if UNICODESCRIPT
-	QFile unicodes("resources/dataFiles/shiftJisAsUnicode.txt");
+	QFile unicodes("resources/AbstractTreeListModels/shiftJisAsUnicode.txt");
 	if(!unicodes.open(QIODevice::ReadOnly)) return;
 	unicodeParser par(unicodes);
 	par.parse();
@@ -1044,7 +1044,7 @@ bool ParserDAT::setData(const QModelIndex &index, const QVariant &value, int rol
 }
 
 bool ParserDAT::insertFront(){
-	if(!DataFile::insertFront()) return false;
+	if(!AbstractTreeListModel::insertFront()) return false;
 
 	int a = 0;
 	for(const column& col: m_dataStructure.header){
@@ -1060,7 +1060,7 @@ bool ParserDAT::insertFront(){
 	return true;
 }
 bool ParserDAT::insertBack(){
-	if(!DataFile::insertBack()) return false;
+	if(!AbstractTreeListModel::insertBack()) return false;
 
 
 	int i = 0;
@@ -1076,7 +1076,7 @@ bool ParserDAT::insertBack(){
 }
 
 bool ParserDAT::insertAt(int indexIn){
-	if(!DataFile::insertAt(indexIn)) return false;
+	if(!AbstractTreeListModel::insertAt(indexIn)) return false;
 
 
 	int a = 0;
@@ -1095,7 +1095,7 @@ bool ParserDAT::insertAt(int indexIn){
 }
 
 bool ParserDAT::removeAt(int indexIn){
-	if(!DataFile::removeAt(indexIn)) return false;
+	if(!AbstractTreeListModel::removeAt(indexIn)) return false;
 
 
 

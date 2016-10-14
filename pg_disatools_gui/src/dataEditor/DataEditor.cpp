@@ -27,7 +27,7 @@
 
 
 
-PreviewDAT::PreviewDAT(QObject *parent): DataFile(parent){
+PreviewDAT::PreviewDAT(QObject *parent): AbstractTreeListModel(parent){
 	QList<QVariant> data;
 	data << "Definition file" << "Description" << "File starting name";
 	m_root = new TreeItem(data);
@@ -133,7 +133,7 @@ DataEditor::~DataEditor() {
 	// TODO Auto-generated destructor stub
 }
 
-void DataEditor::setModel(DataFile* model){
+void DataEditor::setModel(AbstractTreeListModel* model){
 	if(!model) return;
 	if(m_file) {
 		disconnect(this, SIGNAL(openFile(const QString&)), m_file, SLOT(open(const QString&) ));

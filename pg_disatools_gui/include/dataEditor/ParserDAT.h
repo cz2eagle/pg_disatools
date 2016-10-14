@@ -20,7 +20,7 @@
 
 #include <util/TreeItem.h>
 #include <QString>
-#include <dataEditor/DataFile.h>
+#include <util/AbstractTreeListModel.h>
 #include <QList>
 
 #include <QColor>
@@ -77,7 +77,7 @@ struct parse{
 	}
 };
 
-class ParserDAT: public DataFile  {
+class ParserDAT: public AbstractTreeListModel  {
 	Q_OBJECT
 public:
 	ParserDAT(const QString& defFile, QObject *parent = 0);

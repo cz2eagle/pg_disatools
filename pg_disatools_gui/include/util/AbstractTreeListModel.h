@@ -1,22 +1,33 @@
 /*
- * DataFile.h
+ *  GNU Lesser General Public License (LGPL):
  *
- *  Created on: 04.09.2016
- *      Author: ProgSys
+ *	Copyright (C) 2016  ProgSys
+ *
+ *	This program is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU Lesser General Public License as published by
+ *	the Free Software Foundation, version 3 of the License.
+ *
+ *	This program is distributed in the hope that it will be useful,
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU Lesser General Public License for more details.
+ *
+ *	You should have received a copy of the GNU Lesser General Public License
+ *	along with this program.  If not, see http://doc.qt.io/qt-5/lgpl.html
+ *	or http://www.gnu.org/licenses/
  */
 
-#ifndef INCLUDE_FILES_DATAFILE_H_
-#define INCLUDE_FILES_DATAFILE_H_
+#ifndef INCLUDE_FILES_AbstractTreeListModel_H_
+#define INCLUDE_FILES_AbstractTreeListModel_H_
 
 #include <QAbstractListModel>
 #include <QString>
 #include <util/TreeItem.h>
 
-class DataFile : public QAbstractListModel {
+class AbstractTreeListModel : public QAbstractListModel {
 	Q_OBJECT
 public:
-	DataFile(QObject *parent = 0);
-	virtual ~DataFile();
+	AbstractTreeListModel(QObject *parent = 0);
+	virtual ~AbstractTreeListModel();
 	virtual int getColumnWidth(int index) const;
 
 	virtual QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
@@ -44,4 +55,4 @@ protected:
 	TreeItem* m_root = nullptr;
 };
 
-#endif /* INCLUDE_FILES_DATAFILE_H_ */
+#endif /* INCLUDE_FILES_AbstractTreeListModel_H_ */

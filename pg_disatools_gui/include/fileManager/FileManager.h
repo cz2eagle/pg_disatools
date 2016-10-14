@@ -15,51 +15,33 @@
  *	along with this program.  If not, see http://doc.qt.io/qt-5/lgpl.html
  *	or http://www.gnu.org/licenses/
  */
-#ifndef INCLUDE_DATAEDITOR_DATAEDITOR_H_
-#define INCLUDE_DATAEDITOR_DATAEDITOR_H_
-
-
 
 #include <QString>
 #include <QMainWindow>
-#include <ui_dataEditor.h>
-#include <util/AbstractTreeListModel.h>
+#include <ui_fileManager.h>
 
-class PreviewDAT: public AbstractTreeListModel  {
+#ifndef INCLUDE_FILEMANAGER_H_
+#define INCLUDE_FILEMANAGER_H_
+
+class FileManager: public QMainWindow, public Ui::FileManagerUI {
 	Q_OBJECT
 public:
-	PreviewDAT(QObject *parent = 0);
-	virtual ~PreviewDAT();
-};
-
-class DataEditor: public QMainWindow, public Ui::DataEditorUI {
-	Q_OBJECT
-public:
-	DataEditor(QWidget *parent = 0);
-	virtual ~DataEditor();
+	FileManager(QWidget *parent = 0);
+	virtual ~FileManager();
 public slots:
 	void open();
-	void open(const QString& file);
+	void open(const QString& filepath);
+
 	void save();
-	void save(const QString& file);
 	void saveAs();
+	void save(const QString& filepath);
 
-	void exportCSV();
-	void exportCSV(const QString& file);
-
-	 void contextMenu(const QPoint &pos);
-
-signals:
-	bool openFile(const QString& file);
-	bool saveFile(const QString& file);
-	bool exportCSVFile(const QString& file);
 private:
-    void setModel(AbstractTreeListModel* model);
 	void setTitel();
 	void setTitel(const QString& filename);
 
-	AbstractTreeListModel* m_file = nullptr;
-	QString m_fileName;
+	QString m_currentOpendFile;
+
 };
 
-#endif /* INCLUDE_DATAEDITOR_DATAEDITOR_H_ */
+#endif /* INCLUDE_FILEMANAGER_H_ */

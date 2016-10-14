@@ -1,33 +1,43 @@
 /*
- * DataFile.cpp
+ *  GNU Lesser General Public License (LGPL):
  *
- *  Created on: 04.09.2016
- *      Author: ProgSys
+ *	Copyright (C) 2016  ProgSys
+ *
+ *	This program is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU Lesser General Public License as published by
+ *	the Free Software Foundation, version 3 of the License.
+ *
+ *	This program is distributed in the hope that it will be useful,
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU Lesser General Public License for more details.
+ *
+ *	You should have received a copy of the GNU Lesser General Public License
+ *	along with this program.  If not, see http://doc.qt.io/qt-5/lgpl.html
+ *	or http://www.gnu.org/licenses/
  */
-
-#include <dataEditor/DataFile.h>
+#include <util/AbstractTreeListModel.h>
 #include <QFile>
 #include <QTextStream>
 
 
-DataFile::DataFile(QObject *parent): QAbstractListModel(parent) {
+AbstractTreeListModel::AbstractTreeListModel(QObject *parent): QAbstractListModel(parent) {
 	// TODO Auto-generated constructor stub
 
 }
 
-DataFile::~DataFile() {
+AbstractTreeListModel::~AbstractTreeListModel() {
 	if(m_root) delete m_root;
 }
 
-bool DataFile::open(const QString& filepath){return false;}
-bool DataFile::save(const QString& filepath){return false;}
+bool AbstractTreeListModel::open(const QString& filepath){return false;}
+bool AbstractTreeListModel::save(const QString& filepath){return false;}
 
 
-int DataFile::getColumnWidth(int index) const{
+int AbstractTreeListModel::getColumnWidth(int index) const{
 	return 150;
 }
 
-bool DataFile::exportCSV(const QString& filepath) const{
+bool AbstractTreeListModel::exportCSV(const QString& filepath) const{
 	if(!m_root || filepath.isEmpty()) return false;
 
 	QFile qfile(filepath);
@@ -51,7 +61,7 @@ bool DataFile::exportCSV(const QString& filepath) const{
 	return true;
 }
 
-bool DataFile::insertFront(){
+bool AbstractTreeListModel::insertFront(){
 	beginInsertRows(QModelIndex(),0,0);
 	if(m_root->childCount()){
 		m_root->insertFront(new TreeItem(m_root->child(0)->getData(), m_root));
@@ -63,7 +73,7 @@ bool DataFile::insertFront(){
 	endInsertRows();
 	return true;
 }
-bool DataFile::insertBack(){
+bool AbstractTreeListModel::insertBack(){
 	beginInsertRows(QModelIndex(),m_root->childCount(),m_root->childCount());
 	if(m_root->childCount()){
 		m_root->insertBack(new TreeItem(m_root->child(m_root->childCount()-1)->getData(), m_root));
@@ -75,7 +85,7 @@ bool DataFile::insertBack(){
 	endInsertRows();
 	return true;
 }
-bool DataFile::insertAt(int index){
+bool AbstractTreeListModel::insertAt(int index){
 	if(index < 0 || index > m_root->childCount()) return false;
 	beginInsertRows(QModelIndex(),index,index);
 	if(m_root->childCount()){
@@ -89,7 +99,7 @@ bool DataFile::insertAt(int index){
 	return true;
 }
 
-bool DataFile::removeAt(int index){
+bool AbstractTreeListModel::removeAt(int index){
 	beginRemoveRows(QModelIndex(),index,index);
 	if(!m_root->childCount()) return false;
 	m_root->removeAt(index);
@@ -97,7 +107,7 @@ bool DataFile::removeAt(int index){
 	return true;
 }
 
-QVariant DataFile::data(const QModelIndex &index, int role) const{
+QVariant AbstractTreeListModel::data(const QModelIndex &index, int role) const{
     if (!m_root || !index.isValid())
         return QVariant();
 
@@ -110,14 +120,14 @@ QVariant DataFile::data(const QModelIndex &index, int role) const{
 
 }
 
-Qt::ItemFlags DataFile::flags(const QModelIndex &index) const{
+Qt::ItemFlags AbstractTreeListModel::flags(const QModelIndex &index) const{
     if (!m_root || !index.isValid())
         return 0;
 
     return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
-QVariant DataFile::headerData(int section, Qt::Orientation orientation,
+QVariant AbstractTreeListModel::headerData(int section, Qt::Orientation orientation,
                     int role) const{
 
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
@@ -127,7 +137,7 @@ QVariant DataFile::headerData(int section, Qt::Orientation orientation,
 
 }
 
-QModelIndex DataFile::index(int row, int column,
+QModelIndex AbstractTreeListModel::index(int row, int column,
                   const QModelIndex &parent) const{
 
     if (!m_root || !hasIndex(row, column, parent))
@@ -147,7 +157,7 @@ QModelIndex DataFile::index(int row, int column,
         return QModelIndex();
 }
 
-QModelIndex DataFile::parent(const QModelIndex &index) const{
+QModelIndex AbstractTreeListModel::parent(const QModelIndex &index) const{
     if (!m_root || !index.isValid())
         return QModelIndex();
 
@@ -161,7 +171,7 @@ QModelIndex DataFile::parent(const QModelIndex &index) const{
 
 }
 
-int DataFile::rowCount(const QModelIndex &parent) const{
+int AbstractTreeListModel::rowCount(const QModelIndex &parent) const{
     TreeItem *parentItem;
     if (!m_root || parent.column() > 0)
         return 0;
@@ -174,7 +184,7 @@ int DataFile::rowCount(const QModelIndex &parent) const{
     return parentItem->childCount();
 }
 
-int DataFile::columnCount(const QModelIndex &parent) const{
+int AbstractTreeListModel::columnCount(const QModelIndex &parent) const{
 	if(!m_root) return 0;
 	if (parent.isValid())
 		return static_cast<TreeItem*>(parent.internalPointer())->columnCount();

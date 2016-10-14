@@ -53,7 +53,10 @@ find_package(OpenGL3 REQUIRED)
 find_package(GLEW REQUIRED)
 
 QT5_WRAP_UI(UIMainWindowSrcs ui/mainwindow.ui)
+
+QT5_WRAP_UI(UIFileManagerSrcs ui/fileManager.ui)
 QT5_WRAP_UI(UIFileInfoBoxSrcs ui/fileinfobox.ui)
+
 QT5_WRAP_UI(UISpriteSheetEditorSrcs ui/spritesheeteditor.ui)
 QT5_WRAP_UI(UIEnterValueSrcs ui/entervaluedialog.ui)
 QT5_WRAP_UI(UICreateNewSpriteSrcs ui/createNewSpriteSheet.ui)
@@ -132,42 +135,42 @@ message (STATUS "Project binary dir: ${PROJECT_BINARY_DIR}")
 message (STATUS "Project source dir: ${PROJECT_SOURCE_DIR}")
 
 #===============================================
-#   pg_disatools_gui Files
+#   pg_file_manager2 Files
 #===============================================
-file(GLOB PG_FILE_MENEGER_SRC
+file(GLOB PG_FILE_MANAGER_SRC
 	#"*.cpp"
 	"src/*.cpp"
 	"src/util/*.cpp"
-	"src/fileMenager/*.cpp"
+	"src/fileManager/*.cpp"
 )
 
-file(GLOB PG_FILE_MENEGER_HEADERS
+file(GLOB PG_FILE_MANAGER_HEADERS
 	#"*.h"
 	"include/*.h"
 	"include/util/*.h"
-	"include/fileMenager/*.h"
+	"include/fileManager/*.h"
 )
 
 #===============================================
-# pg_file_manager
+# pg_file_manager2
 #===============================================
 if(DEBUG_COMPILE)
 add_executable( 
 	pg_file_manager
-		"fileManager.cpp"
-		${PG_FILE_MENEGER_HEADERS}
-		${PG_FILE_MENEGER_SRC}
-		${MOCSrcs} ${UIMainWindowSrcs} ${UIFileInfoBoxSrcs}  ${UIEnterValueSrcs}
+		"FileManager2.cpp"
+		${PG_FILE_MANAGER_HEADERS}
+		${PG_FILE_MANAGER_SRC}
+		${MOCSrcs} ${UIFileManagerSrcs} ${UIFileInfoBoxSrcs}  ${UIEnterValueSrcs}
 		
 )
 else()
 add_executable( 
 	pg_file_manager
 		WIN32
-		"fileManager.cpp"
-		${PG_FILE_MENEGER_HEADERS}
-		${PG_FILE_MENEGER_SRC}
-		${MOCSrcs} ${UIMainWindowSrcs} ${UIFileInfoBoxSrcs}  ${UIEnterValueSrcs}
+		"FileManager2.cpp"
+		${PG_FILE_MANAGER_HEADERS}
+		${PG_FILE_MANAGER_SRC}
+		${MOCSrcs} ${UIFileManagerSrcs} ${UIFileInfoBoxSrcs}  ${UIEnterValueSrcs}
 		
 )
 set_target_properties(pg_file_manager PROPERTIES OUTPUT_NAME ${FileManagerTITLE})
@@ -175,11 +178,11 @@ endif()
 
 target_link_libraries(
 	pg_file_manager
-	${OpenGL3_LIBRARY}
-	${GLEW_LIBRARY}
 	
 	Qt5::Widgets
-	#Qt5::OpenGL
+	Qt5::Qml
+	Qt5::Quick
+	Qt5::QuickWidgets
 	${PG_DISATOOLS_LIBRARY}
 	${sim_EXE_SRCS}
 )
@@ -289,8 +292,6 @@ endif()
 
 target_link_libraries(
 	pg_data_editor
-	${OpenGL3_LIBRARY}
-	${GLEW_LIBRARY}
 	
 	Qt5::Widgets
 	${PG_DISATOOLS_LIBRARY}
