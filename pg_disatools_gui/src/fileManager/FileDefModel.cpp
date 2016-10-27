@@ -472,7 +472,7 @@ bool Operation::run(QVariant& out, QList<variable>& variables){
 			return false;
 		}
 	}else{
-		QDEBUG("Unknown operation!");
+		QDEBUG("Unknown operation "<<toString(operatorType)<<"!");
 		return false;
 	}
 
@@ -526,7 +526,7 @@ AssignNew::AssignNew(const QString& targetTypeLeximeIn, const QString& identifer
 	else if(targetTypeLeximeIn == "string") targetType = variable::String;
 	else targetType = variable::Void;
 
-	operation = parse(operationOp);
+	operation = parseOperation(operationOp);
 }
 AssignNew::~AssignNew(){
 	delete operation;
@@ -637,6 +637,73 @@ inline QList<token>& removeFirst(QList<token>& tokensIn, int number = 1 ){
 	for(unsigned int i = 0 ; i < number ; i++)
 		tokensIn.removeFirst();
 	return tokensIn;
+}
+
+Programm* parseOperation( const QList<token>& tokensIn){
+	/*
+#ifdef DEBUG
+	QString str;
+	for(const token& t: tokensIn)
+		str+= t.lexeme;
+	QDEBUG("parseOperation: "+str);
+#endif
+*/
+	if(tokensIn.empty()){
+		QDEBUG("tokensIn is empty!");
+		return nullptr;
+	}else if(tokensIn.size() == 1 && isOpValue(tokensIn[0].type)){
+		return new Atom(tokensIn[0]);
+	}else if(tokensIn.size() > 2){
+		int i = 0;
+		int parenthesis = 0;
+		int parenthesisJumps = 0;
+
+		int splitAt = 0;
+		unsigned char prio = 0;
+		token::TokenClass type = token::NONE;
+
+		for(const token& t: tokensIn){
+
+			if(t.type == token::Left_Parenthesis)
+				parenthesis++;
+			else if(t.type == token::Right_Parenthesis){
+				parenthesis--;
+				if(parenthesis == 0){
+					parenthesisJumps++;
+				}else if(parenthesis < 0){
+					QDEBUG("Parenthesis are uneven!");
+					return nullptr;
+				}
+			}
+
+			if(parenthesis == 0){
+				if(prio < 3 &&
+					(t.type == token::Bigger_Then || t.type == token::Bigger_Equal_Then || t.type == token::Smaller_Then || t.type == token::Smaller_Equal_Then || t.type == token::Equal)){
+					splitAt = i;
+					prio = 3;
+					type = t.type;
+					break;
+				}else if(prio < 2 && (t.type == token::Plus || t.type == token::Minus)){
+					splitAt = i;
+					prio = 2;
+					type = t.type;
+				}else if(prio < 1 && (t.type == token::Multiply || t.type == token::Divide)){
+					splitAt = i;
+					prio = 1;
+					type = t.type;
+				}
+			}
+			i++;
+		}
+
+		if(prio) return new Operation(parseOperation(tokensIn.mid(0, splitAt)), type, parseOperation( tokensIn.mid(splitAt+1, tokensIn.size())));
+		else if(parenthesisJumps == 1 && tokensIn.first().type == token::Left_Parenthesis && tokensIn.last().type == token::Right_Parenthesis)
+			return parseOperation(tokensIn.mid(1, tokensIn.size()-2));
+
+
+	}
+
+	return nullptr;
 }
 
 Programm* parse( const QList<token>& tokensIn){

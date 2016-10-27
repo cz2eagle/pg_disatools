@@ -145,6 +145,7 @@ public:
 	QList<Programm*> programms;
 };
 
+Programm* parseOperation( const QList<token>& tokensIn);
 Programm* parse( const QList<token>& tokensIn);
 
 class FileDefModel: public AbstractTreeListModel {
