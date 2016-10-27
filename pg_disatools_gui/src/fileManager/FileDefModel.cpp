@@ -25,6 +25,7 @@ QString toString(token::TokenClass type){
 		case token::String: return "String"; break;
 		case token::Integer: return "Integer"; break;
 		case token::Keyword: return "Keyword"; break;
+		case token::Boolean: return "Boolean"; break;
 		case token::VarType: return "VarType"; break;
 		case token::Left_Parenthesis: return "Left_Parenthesis"; break;
 		case token::Right_Parenthesis: return "Right_Parenthesis"; break;
@@ -123,7 +124,8 @@ token validate(token& t){
 			t.lexeme == "int64" || t.lexeme == "long" ||
 			t.lexeme == "int32" || t.lexeme == "int" ||
 			t.lexeme == "int16" || t.lexeme == "short" ||
-			t.lexeme == "int8" || t.lexeme == "char"
+			t.lexeme == "int8" || t.lexeme == "char" ||
+			t.lexeme == "bool"
 	){
 		t.type = token::VarType;
 	}else if(t.lexeme.size() > 3 && t.lexeme[0] == '\''  && t.lexeme[t.lexeme.size()-1] == '\''){
@@ -282,12 +284,29 @@ bool Atom::run(QVariant& out, QList<variable>& variables){
 			if(var.name ==  atom.lexeme){
 				out = var.value;
 				type = var.getType();
+				return true;
 			}
 		}
-		qDebug()<< "Unknown Identifier "<< atom.lexeme;
+		QDEBUG("Unknown Identifier "<< atom.lexeme);
 		return false;
 	}
 	return true;
+}
+
+bool Atom::runRef(QVariant*& out, QList<variable>& variables){
+	if(atom.type == token::Identifer){
+		for(variable& var: variables){
+			if(var.name ==  atom.lexeme){
+				out = &var.value;
+				type = var.getType();
+				return true;
+			}
+		}
+		QDEBUG("Unknown Identifier "<< atom.lexeme);
+		return false;
+	}
+	QDEBUG("runRef only works for Variables ("<< atom.lexeme<<")");
+	return false;
 }
 
 
@@ -295,7 +314,16 @@ variable::varTypes Atom::getType() const{
 	return type;
 }
 
+// Operation
+Operation::Operation(token& leftIn, token::TokenClass operatorTypeIn, token& rightIn):
+		left(new Atom(leftIn)), operatorType(operatorTypeIn), right(new Atom(rightIn)) {
 
+}
+
+Operation::Operation(token& leftIn, token::TokenClass operatorTypeIn, const QList<token>& rightIn):
+		left(new Atom(leftIn)), operatorType(operatorTypeIn) {
+	right = parse(rightIn);
+}
 
 Operation::Operation(Programm* leftIn, token::TokenClass operatorTypeIn, Programm* rightIn):
 	left(leftIn), operatorType(operatorTypeIn), right(rightIn){}
@@ -305,6 +333,10 @@ Operation::~Operation(){
 }
 
 bool Operation::run(QVariant& out, QList<variable>& variables){
+	if(!left || !right) {
+		QDEBUG("Left or Right is nullptr!");
+		return false;
+	}
 	QVariant a,b;
 	if(!left->run(a,variables)) return false;
 	if(!right->run(b,variables)) return false;
@@ -318,15 +350,129 @@ bool Operation::run(QVariant& out, QList<variable>& variables){
 				out = a.toString()+b.toString();
 				type = variable::String;
 			}else{
-				qDebug()<<"You can only ADD numbers or strings!";
+				QDEBUG("You can only ADD numbers or strings!");
 				return false;
 			}
 		}else{
-			qDebug()<<"Add operation with invalid types!";
+			QDEBUG("ADD operation with invalid types!");
+			return false;
+		}
+	}else if(operatorType == token::Minus){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = a.toInt()-b.toInt();
+				type = variable::Number;
+			}else if(left->getType() == variable::String){
+				out = a.toString().replace(b.toString(), "");
+				type = variable::String;
+			}else{
+				QDEBUG("You can only MINUS numbers or strings!");
+				return false;
+			}
+		}else{
+			QDEBUG("MINUS operation with invalid types!");
+			return false;
+		}
+	}else if(operatorType == token::Multiply){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = a.toInt()*b.toInt();
+				type = variable::Number;
+			}else{
+				QDEBUG("You can only MULTIPLY numbers !");
+				return false;
+			}
+		}else{
+			QDEBUG("MULTIPLY operation with invalid types!");
+			return false;
+		}
+	}else if(operatorType == token::Divide){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = a.toInt()/b.toInt();
+				type = variable::Number;
+			}else{
+				QDEBUG("You can only DIVIDE numbers !");
+				return false;
+			}
+		}else{
+			QDEBUG("DIVIDE operation with invalid types!");
+			return false;
+		}
+
+
+	}else if(operatorType == token::Bigger_Then){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = bool(a.toInt() > b.toInt());
+				type = variable::Boolean;
+			}else{
+				QDEBUG("You can only Bigger_Then numbers !");
+				return false;
+			}
+		}else{
+			QDEBUG("Bigger_Then operation with invalid types!");
+			return false;
+		}
+	}else if(operatorType == token::Bigger_Equal_Then){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = bool(a.toInt() >= b.toInt());
+				type = variable::Boolean;
+			}else{
+				QDEBUG("You can only Bigger_Equal_Then numbers !");
+				return false;
+			}
+		}else{
+			QDEBUG("Bigger_Equal_Then operation with invalid types!");
+			return false;
+		}
+
+	}else if(operatorType == token::Smaller_Then){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = bool(a.toInt() < b.toInt());
+				type = variable::Boolean;
+			}else{
+				QDEBUG("You can only Smaller_Then numbers !");
+				return false;
+			}
+		}else{
+			QDEBUG("Smaller_Then operation with invalid types!");
+			return false;
+		}
+	}else if(operatorType == token::Smaller_Equal_Then){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = bool(a.toInt() <= b.toInt());
+				type = variable::Boolean;
+			}else{
+				QDEBUG("You can only Smaller_Equal_Then numbers !");
+				return false;
+			}
+		}else{
+			QDEBUG("Smaller_Equal_Then operation with invalid types!");
+			return false;
+		}
+
+	}else if(operatorType == token::Equal){
+		if(left->getType() == right->getType() ){
+			if(left->getType() == variable::Number){
+				out = bool(a.toInt() == b.toInt());
+				type = variable::Boolean;
+			}else if(left->getType() == variable::String){
+				out = bool(a.toString() == b.toString());
+				type = variable::Boolean;
+			}else{
+				QDEBUG("You can only Equal numbers or strings !");
+				return false;
+			}
+		}else{
+			QDEBUG("Smaller_Equal_Then operation with invalid types!");
 			return false;
 		}
 	}else{
-		qDebug()<<"Unknown operation!";
+		QDEBUG("Unknown operation!");
 		return false;
 	}
 
@@ -337,19 +483,66 @@ variable::varTypes Operation::getType() const{
 	return type;
 }
 
-AssignNew::AssignNew(variable::varTypes targetTypeIn, const QString& nameIn, Programm* operationIn):
-		targetType(targetTypeIn), name(nameIn), operation(operationIn){}
+OperationSingle::OperationSingle(token& leftIn, token::TokenClass operatorTypeIn): left(new Atom(leftIn)), operatorType(operatorTypeIn){
+
+}
+OperationSingle::~OperationSingle(){
+	delete left;
+}
+
+bool OperationSingle::run(QVariant& out, QList<variable>& variables){
+	if(!left) {
+		QDEBUG("left is nullptr!");
+		return false;
+	}
+	QVariant* a;
+	if(!left->runRef(a,variables)) return false;
+
+	if(left->getType() == variable::Number){
+		if(operatorType == token::Increase){
+			(*a) = a->toInt()+1;
+		}else if(operatorType == token::Decrease){
+			(*a) = a->toInt()-1;
+		}else{
+			QDEBUG("Operator can only be Increase or Decrease!");
+			return false;
+		}
+
+	}else{
+		QDEBUG("Type can only be Number!");
+		return false;
+	}
+	type = variable::Number;
+	return true;
+}
+
+variable::varTypes OperationSingle::getType() const{
+	return type;
+}
+
+AssignNew::AssignNew(const QString& targetTypeLeximeIn, const QString& identiferLeximeIn, const QList<token>& operationOp):name(identiferLeximeIn){
+	if(targetTypeLeximeIn == "int") targetType = variable::Number;
+	else if(targetTypeLeximeIn == "bool") targetType = variable::Boolean;
+	else if(targetTypeLeximeIn == "string") targetType = variable::String;
+	else targetType = variable::Void;
+
+	operation = parse(operationOp);
+}
 AssignNew::~AssignNew(){
 	delete operation;
 }
 
 bool AssignNew::run(QVariant& out, QList<variable>& variables){
+	if(!operation) {
+		QDEBUG("operation is nullptr!");
+		return false;
+	}
 	QVariant a;
 	operation->run(a, variables);
 
 	for(const variable& var: variables){
 		if(var.name == name){
-			qDebug()<<"Assign: Variable with the name: "<<name<<" already defined!";
+			QDEBUG("Assign: Variable with the name: "<<name<<" already defined!");
 			return false;
 		}
 	}
@@ -357,11 +550,15 @@ bool AssignNew::run(QVariant& out, QList<variable>& variables){
 	variable v;
 
 	if(operation->getType() == variable::Void){
-		qDebug()<<"Assign: Type can't be void!";
+		QDEBUG("Assign: Type can't be void!");
 		return false;
 	}
 
-	if(operation->getType() != targetType){
+	if(targetType == variable::Boolean && operation->getType() == variable::Number){
+		a = bool(a.toInt());
+	}else if(targetType == variable::Number && operation->getType() == variable::Boolean){
+		a = int(a.toBool());
+	}else if(operation->getType() != targetType){
 		qDebug()<<"Assign: Type isn't the target type! ("<<operation->getType()<<" != "<<targetType<<")";
 		return false;
 	}
@@ -371,6 +568,29 @@ bool AssignNew::run(QVariant& out, QList<variable>& variables){
 
 	variables.push_back(v);
 	return true;
+}
+
+//============== Block ==============
+
+Block::Block(){}
+Block::~Block(){
+	for(Programm* p : programms) delete p;
+}
+
+bool Block::run(QVariant& out, QList<variable>& variables){
+	for(Programm* p : programms) if(!p || !p->run(out, variables)) return false;
+	return true;
+}
+
+void Block::push_back(Programm* p){
+	programms.push_back(p);
+}
+
+bool Block::isEmpty() const{
+	return programms.isEmpty();
+}
+int Block::size() const{
+	return programms.size();
 }
 
 //Void, String, Boolean, Number, Array
@@ -385,17 +605,81 @@ variable::varTypes getVarType(const token& t){
 	return variable::Void;
 }
 
+inline bool isOpOperator(token::TokenClass tclass){
+	switch (tclass) {
+		case token::Plus:
+		case token::Minus:
+		case token::Divide:
+		case token::Multiply:
+		case token::Bigger_Then:
+		case token::Bigger_Equal_Then:
+		case token::Smaller_Then:
+		case token::Smaller_Equal_Then:
+		case token::Equal:
+			return true;
+			break;
+	}
+	return false;
+}
+
+inline bool isOpValue(token::TokenClass tclass){
+	switch (tclass) {
+		case token::Integer:
+		case token::String:
+		case token::Identifer:
+			return true;
+			break;
+	}
+	return false;
+}
+
+inline QList<token>& removeFirst(QList<token>& tokensIn, int number = 1 ){
+	for(unsigned int i = 0 ; i < number ; i++)
+		tokensIn.removeFirst();
+	return tokensIn;
+}
+
 Programm* parse( const QList<token>& tokensIn){
-	Programm* p =  new AssignNew(
-			getVarType(tokensIn[0]),
-			tokensIn[1].lexeme,
-			new Operation(
-					new Operation( new Atom(tokensIn[3]), tokensIn[4].type, new Atom(tokensIn[5]) ),
-					tokensIn[6].type,
-					new Atom(tokensIn[7])
-					)
-			);
-	return p;
+	auto it = tokensIn.begin();
+	Programm* pOut = nullptr;
+	while(it != tokensIn.end()){
+		QList<token> command;
+		auto it2 = it;
+		while(it2 != tokensIn.end()){
+			if(it2->type == token::Semicolon){
+				it2++;
+				if(!pOut) pOut = new Block;
+				break;
+			}
+			command.push_back(*it2);
+			it2++;
+		}
+		it = it2;
+
+		Programm* p;
+		//Identify
+		if(command.size() > 3 && command[0].type == token::VarType && command[1].type == token::Identifer && command[2].type == token::Equals_Sign){
+			//assign new
+			QDEBUG("AssignNew: "<<command[0].lexeme<<" "<<command[1].lexeme<<" = ...");
+			p = new AssignNew(command[0].lexeme, command[1].lexeme, removeFirst(command, 3));
+		}else if(command.size() == 3 && isOpValue(command[0].type) && isOpOperator(command[1].type) && isOpValue(command[2].type)){
+			QDEBUG("Operation: "<<command[0].lexeme<<" "<<command[1].lexeme<<" "<<command[2].lexeme);
+			p = new Operation(command[0], command[1].type, command[2]);
+		}else if(command.size() > 3 && isOpValue(command[0].type) && isOpOperator(command[1].type)){
+			QDEBUG("Operation: "<<command[0].lexeme<<" "<<command[1].lexeme<<" ...");
+			p = new Operation(command[0], command[1].type, removeFirst(command, 2));
+		}else if(command.size() == 2 && command[0].type == token::Identifer && (command[1].type == token::Increase || command[1].type == token::Decrease) ){
+			QDEBUG("OperationSingle: "<<command[0].lexeme<<" "<<command[1].lexeme);
+			p = new OperationSingle(command[0], command[1].type);
+		}
+		if(pOut) ((Block*)pOut)->push_back(p);
+		else return p;
+	}
+
+#ifdef DEBUG
+	if(!pOut) qDebug() << "No programm identifyed!";
+#endif
+	return pOut;
 }
 
 //////////////////////////

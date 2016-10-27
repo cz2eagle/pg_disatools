@@ -15,11 +15,13 @@
 #include <QTextStream>
 #include <QVariant>
 
+#define QDEBUG(x) qDebug()<<__LINE__<<": "<<x
+
 struct token{
 	enum TokenClass{
 		NONE,
 		Whitespace,
-		Identifer, String, Integer, Keyword,
+		Identifer, String, Integer, Boolean, Keyword,
 
 		VarType,
 
@@ -58,9 +60,9 @@ struct variable{
  */
 class Programm{
 public:
-	enum ProgrammClass{
-		NONE, Atom, Logic, Math, Assign, AssignNew, If, IfElse, For, While, Function, Block
-	};
+	//enum ProgrammClass{
+		//NONE, Atom, Logic, Math, Assign, AssignNew, If, IfElse, For, While, Function, Block
+	//};
 
 	Programm();
 	virtual ~Programm();
@@ -77,6 +79,7 @@ public:
 	virtual ~Atom();
 
 	virtual bool run(QVariant& out, QList<variable>& variables);
+	bool runRef(QVariant*& out, QList<variable>& variables);
 
 	virtual variable::varTypes getType() const;
 
@@ -86,6 +89,8 @@ public:
 
 class Operation: public Programm{
 public:
+	Operation(token& leftIn, token::TokenClass operatorTypeIn, token& rightIn);
+	Operation(token& leftIn, token::TokenClass operatorTypeIn, const QList<token>& rightIn);
 	Operation(Programm* leftIn, token::TokenClass operatorTypeIn, Programm* rightIn);
 	virtual ~Operation();
 
@@ -100,18 +105,44 @@ public:
 	variable::varTypes type = variable::Void;
 };
 
+class OperationSingle: public Programm{
+public:
+	OperationSingle(token& leftIn, token::TokenClass operatorTypeIn);
+	virtual ~OperationSingle();
+
+	virtual bool run(QVariant& out, QList<variable>& variables);
+
+	virtual variable::varTypes getType() const;
+
+	Atom* left;
+	token::TokenClass operatorType;
+
+	variable::varTypes type = variable::Void;
+};
+
 class AssignNew: public Programm{
 public:
-	AssignNew(variable::varTypes targetTypeIn, const QString& nameIn, Programm* operationIn);
+	AssignNew(const QString& targetTypeLeximeIn, const QString& identiferLeximeIn, const QList<token>& operation);
 	virtual ~AssignNew();
 
 	virtual bool run(QVariant& out, QList<variable>& variables);
 
 	variable::varTypes targetType;
 	QString name;
-	Programm* operation;
+	Programm* operation = nullptr;
+};
 
+class Block: public Programm{
+public:
+	Block();
+	virtual ~Block();
 
+	virtual bool run(QVariant& out, QList<variable>& variables);
+	void push_back(Programm* p);
+	bool isEmpty() const;
+	int size() const;
+
+	QList<Programm*> programms;
 };
 
 Programm* parse( const QList<token>& tokensIn);
